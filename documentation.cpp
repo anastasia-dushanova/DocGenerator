@@ -21,10 +21,15 @@ void Documentation::generateDocumentation(){
         while(!file.atEnd()){
             QByteArray currentLine = file.readLine();
 //            qDebug() << QString::fromUtf8(line);
+            QString nameSpace{""};
             if(currentLine.contains("\\namespace")){
 //                QByteArray next = file.readLine();
 //                qDebug() << QString::fromUtf8(line);
+                QString str(currentLine);
+                QStringList list = str.split("\\namespace ");
+                nameSpace = list[1].remove("\r\n");
 
+                if(!nameSpace.isEmpty()) qDebug() <<"\n"<<QString::fromUtf8("Пространство имен ")<<nameSpace ;
             }
 
             if(currentLine.contains("\\brief")){
@@ -33,9 +38,11 @@ void Documentation::generateDocumentation(){
                 QString description{""};
                 QString version{""};
                 QString date{""};
-                QString param{""};
+                QStringList params;
                 QString method{""};
                 QString member{""};
+                QString className{""};
+                QString returnValue{""};
 
                 QString str(currentLine);
                 QStringList brief = str.split("\\brief ");
@@ -44,76 +51,83 @@ void Documentation::generateDocumentation(){
                 QByteArray nextLine = file.readLine();
 
                 if(nextLine.contains("\\version")){
-                    QString ver(nextLine);
-                    QStringList v = ver.split("\\version ");
-                    version = v[1].remove("\r\n");
+                    version = getPartOfComment(nextLine, "\\version");
                     nextLine = file.readLine();
                 }
 
                 if(nextLine.contains("\\date")){
-                    QString date_str(nextLine);
-                    QStringList d = date_str.split("\\date ");
-                    date = d[1].remove("\r\n");
+                    date = getPartOfComment(nextLine, "\\date");
                     nextLine = file.readLine();
                 }
 
                 if(nextLine.contains("\\param")){
 
-                    QString param_str(nextLine);
-                    QStringList param_list = param_str.split("\\param ");
-                    param = param_list[1].remove("\r\n");
+                    params.append(getPartOfComment(nextLine, "\\param"));
+                    nextLine = file.readLine();
+                    while(nextLine.contains("\\param")){
+                        params.append(getPartOfComment(nextLine, "\\param"));
+                        nextLine = file.readLine();
+                    }
+
                     QByteArray method_byte = file.readLine();
                     if(method_byte.contains("*/"))
                         method_byte = file.readLine();
-//                    qDebug() << method;
+
                     method = QString(method_byte).remove("\r\n");
+                }
+
+                if(nextLine.contains("\\return")){
+                    returnValue = getPartOfComment(nextLine, "\\return");
+                    nextLine = file.readLine();
                 }
 
                 if(nextLine.contains("*/")){
                     nextLine = file.readLine();
-//                    QRegExp reg("\\([a-zA-Z]*\\)");
-                    if(/*reg.exactMatch(nextLine) ||*/ nextLine.contains("()")){
-//                        QByteArray method_byte = file.readLine();
-//                        method = QString(method_byte).remove("\r\n");
+                    if(nextLine.contains("()")){
                         method = QString(nextLine).remove("\r\n");
-                    }else{
-//                        QByteArray member_byte = file.readLine();
-//                        member = QString(member_byte).remove("\r\n");
+                    }else if(nextLine.contains("class")){
+                        className = QString(nextLine).remove("\r\n");
+                    }else {
                         member = QString(nextLine).remove("\r\n");
                     }
                 }
 
-
                 if(!description.isEmpty()) qDebug() <<"\n"<<QString::fromUtf8("Описание ")<<description ;
                 if(!version.isEmpty()) qDebug() <<QString::fromUtf8("Версия ")<<version ;
                 if(!date.isEmpty()) qDebug() <<QString::fromUtf8("Дата ")<<date ;
-                if(!param.isEmpty()) qDebug() <<QString::fromUtf8("Аргументы метода ")<<param ;
+                if(!date.isEmpty()) qDebug() <<QString::fromUtf8("Имя класса ")<<className ;
+                if(!params.isEmpty()) qDebug() <<QString::fromUtf8("Аргументы метода ")<<params ;
+                if(!returnValue.isEmpty()) qDebug() <<QString::fromUtf8("возращаемый тип ")<<returnValue ;
                 if(!method.isEmpty()) qDebug() <<QString::fromUtf8("Имя метода ")<<method ;
                 if(!member.isEmpty()) qDebug() <<QString::fromUtf8("Имя поля ")<<member ;
             }
 
 
 
-
-            if(currentLine.contains("class")){
-                qDebug() << QString::fromUtf8(currentLine);
-            }
             if(currentLine.contains("public:")){
-                qDebug() << QString::fromUtf8(currentLine);
+                qDebug() << QString(currentLine).remove("\r\n");
             }
             if(currentLine.contains("private slots:")){
-                qDebug() << QString::fromUtf8(currentLine);
+                qDebug() << QString(currentLine).remove("\r\n");
             }
             if(currentLine.contains("signals:")){
-                qDebug() << QString::fromUtf8(currentLine);
+                qDebug() << QString(currentLine).remove("\r\n");
             }
             if(currentLine.contains("private:")){
-                qDebug() << QString::fromUtf8(currentLine);
+                qDebug() << QString(currentLine).remove("\r\n");
             }
 
         }
-        emit progress(i+1, listFiles.size());
-//        qDebug() << count;
+        emit progress(i+1);
+        emit changeStatus(i, int(Status::Status_ready));
     }
 
+    emit changeStatus(0, int(Status::Status_done));
+
+}
+
+QString Documentation::getPartOfComment(QByteArray array, QString separator){
+    QString array_str(array);
+    QStringList list = array_str.split(separator);
+    return list[1].remove("\r\n");
 }

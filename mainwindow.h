@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QDebug>
+#include <QMessageBox>
 #include <documentation.h>
 
 QT_BEGIN_NAMESPACE
@@ -24,15 +25,25 @@ private slots:
 
     void on_pushButton_start_clicked();
 
-    void progressChanged(int doneCount, int maxCount);
+    void slotProgressChanged(int doneCount);
+
+    void slotChangeStatus(int row, int status);
 
 private:
     Ui::MainWindow *ui;
     Documentation* doc;
 
+    enum class Status : int{
+        Status_added = 1,
+        Status_processing,
+        Status_ready,
+        Status_error,
+        Status_done
+    };
+
     QStringList selectedFiles;
 
-    void outputOnTableView(QStringList list);
+    void inputOnTableView(QStringList list);
 
 
 };
