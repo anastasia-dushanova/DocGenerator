@@ -6,13 +6,15 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFileInfo>
+#include <command.h>
+#include <writer.h>
 
 class Documentation : public QObject
 {
     Q_OBJECT
 public:
     Documentation();
-    ~Documentation() {}
+    ~Documentation();
 
     void setListFiles(QStringList list);
 
@@ -27,9 +29,13 @@ private:
 
     QStringList listFiles;
 
+    Writer* writer;
+
     void generateDocumentation();
 
     QString getPartOfComment(QByteArray array, QString separator);
+
+    void wirteDoc();
 
 signals:
     void progress(int doneCount);

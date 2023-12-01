@@ -21,6 +21,9 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_chooseFile_clicked()
 {
     qDebug() << "on_pushButton_chooseFile_clicked";
+    if(!selectedFiles.isEmpty())
+        selectedFiles.clear();
+
     selectedFiles  = QFileDialog::getOpenFileNames(this, "Выберите файлы", "D:/univer/maga/Managment/Library", "");
 
     if(selectedFiles.isEmpty())
@@ -32,8 +35,12 @@ void MainWindow::on_pushButton_chooseFile_clicked()
 
 void MainWindow::inputOnTableView(QStringList list){
 
-    ui->tableWidget->setRowCount(list.size());
     qDebug() << "outputOnTableView(QStringList list)";
+    if(ui->tableWidget->rowCount() > 0)
+        ui->tableWidget->clearContents();
+
+    ui->tableWidget->setRowCount(list.size());
+
     for(int i = 0; i < list.size(); ++i){
         QTableWidgetItem* item_name = new QTableWidgetItem(QFileInfo(list[i]).fileName());
         ui->tableWidget->setItem(i, 0, item_name);

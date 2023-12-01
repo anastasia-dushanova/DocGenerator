@@ -12,12 +12,14 @@ SOURCES += \
     command.cpp \
     documentation.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    writer.cpp
 
 HEADERS += \
     command.h \
     documentation.h \
-    mainwindow.h
+    mainwindow.h \
+    writer.h
 
 FORMS += \
     mainwindow.ui

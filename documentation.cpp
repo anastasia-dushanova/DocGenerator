@@ -4,102 +4,121 @@ Documentation::Documentation() { }
 
 void Documentation::setListFiles(QStringList list){
     listFiles = list;
+    writer = new Writer();
     generateDocumentation();
+}
+
+Documentation::~Documentation(){
+    delete writer;
 }
 
 void Documentation::generateDocumentation(){
     qDebug() << "Documentation::generateDocumentation()";
-    QFile fileDoc(QCoreApplication::applicationDirPath() + "/documentation.md");
-    if(!fileDoc.open(QIODevice::ReadWrite | QIODevice::Append))
-        qDebug() << "error";
+
 
     for(int i = 0; i < listFiles.size(); ++i){
+
         QFile file(listFiles[i]);
+        writer->writeFilename(QFileInfo(listFiles[i]).fileName());
+
         if(!file.open(QIODevice::ReadOnly))
             qDebug() << "error";
-//        int count = 0;
+
         while(!file.atEnd()){
             QByteArray currentLine = file.readLine();
-//            qDebug() << QString::fromUtf8(line);
             QString nameSpace{""};
-            if(currentLine.contains("\\namespace")){
-//                QByteArray next = file.readLine();
-//                qDebug() << QString::fromUtf8(line);
-                QString str(currentLine);
-                QStringList list = str.split("\\namespace ");
-                nameSpace = list[1].remove("\r\n");
 
+            if(currentLine.contains("\\namespace")){
+                nameSpace = getPartOfComment(currentLine, "\\namespace");
                 if(!nameSpace.isEmpty()) qDebug() <<"\n"<<QString::fromUtf8("Пространство имен ")<<nameSpace ;
             }
 
             if(currentLine.contains("\\brief")){
-//                qDebug() << QString::fromUtf8(line);
+                Command command;
 
-                QString description{""};
-                QString version{""};
-                QString date{""};
-                QStringList params;
-                QString method{""};
-                QString member{""};
-                QString className{""};
-                QString returnValue{""};
+//                QString description{""};
+//                QString version{""};
+//                QString date{""};
+//                QStringList params;
+//                QString method{""};
+//                QString member{""};
+//                QString className{""};
+//                QString returnValue{""};
 
-                QString str(currentLine);
-                QStringList brief = str.split("\\brief ");
+//                description = getPartOfComment(currentLine, "\\brief");
+                command.setDescription(getPartOfComment(currentLine, "\\brief"));
 
-                description = brief[1].remove("\r\n");
                 QByteArray nextLine = file.readLine();
 
                 if(nextLine.contains("\\version")){
-                    version = getPartOfComment(nextLine, "\\version");
+                    command.setVersion(getPartOfComment(nextLine, "\\version"));
                     nextLine = file.readLine();
                 }
 
                 if(nextLine.contains("\\date")){
-                    date = getPartOfComment(nextLine, "\\date");
+                    command.setDate(getPartOfComment(nextLine, "\\date"));
                     nextLine = file.readLine();
                 }
 
                 if(nextLine.contains("\\param")){
 
+                    QStringList params;
                     params.append(getPartOfComment(nextLine, "\\param"));
                     nextLine = file.readLine();
                     while(nextLine.contains("\\param")){
                         params.append(getPartOfComment(nextLine, "\\param"));
                         nextLine = file.readLine();
+
                     }
 
+                    command.setParams(params);
                     QByteArray method_byte = file.readLine();
                     if(method_byte.contains("*/"))
                         method_byte = file.readLine();
 
-                    method = QString(method_byte).remove("\r\n");
+//                    method = QString(method_byte).remove("\r\n");
+                    command.setMethod(QString(method_byte).remove("\r\n"));
+                    nextLine = file.readLine();
                 }
 
                 if(nextLine.contains("\\return")){
-                    returnValue = getPartOfComment(nextLine, "\\return");
+                    command.setReturnValue(getPartOfComment(nextLine, "\\return"));
                     nextLine = file.readLine();
                 }
 
                 if(nextLine.contains("*/")){
                     nextLine = file.readLine();
                     if(nextLine.contains("()")){
-                        method = QString(nextLine).remove("\r\n");
+                        command.setMethod(QString(nextLine).remove("\r\n"));
                     }else if(nextLine.contains("class")){
-                        className = QString(nextLine).remove("\r\n");
+
+                        QString name = QString(nextLine).remove("\r\n");
+                        QStringList list = name.split(":");
+                        QString className = list[0].split(" ")[1];
+
+                        if(list.size() == 1) break;
+                        QString parent = list[1];
+                        QStringList parentList = parent.split(",");
+
+                        QStringList finalList;
+                        finalList.append(className);
+                        finalList.append(parentList);
+                        command.setClassName(finalList);
+
                     }else {
-                        member = QString(nextLine).remove("\r\n");
+
+                        command.setMember(QString(nextLine).remove("\r\n"));
                     }
                 }
 
-                if(!description.isEmpty()) qDebug() <<"\n"<<QString::fromUtf8("Описание ")<<description ;
-                if(!version.isEmpty()) qDebug() <<QString::fromUtf8("Версия ")<<version ;
-                if(!date.isEmpty()) qDebug() <<QString::fromUtf8("Дата ")<<date ;
-                if(!date.isEmpty()) qDebug() <<QString::fromUtf8("Имя класса ")<<className ;
-                if(!params.isEmpty()) qDebug() <<QString::fromUtf8("Аргументы метода ")<<params ;
-                if(!returnValue.isEmpty()) qDebug() <<QString::fromUtf8("возращаемый тип ")<<returnValue ;
-                if(!method.isEmpty()) qDebug() <<QString::fromUtf8("Имя метода ")<<method ;
-                if(!member.isEmpty()) qDebug() <<QString::fromUtf8("Имя поля ")<<member ;
+                if(!command.getDescription().isEmpty()) qDebug() <<"\n"<<QString::fromUtf8("Описание ")<<command.getDescription() ;
+                if(!command.getVersion().isEmpty()) qDebug() <<QString::fromUtf8("Версия ")<<command.getVersion() ;
+                if(!command.getDate().isEmpty()) qDebug() <<QString::fromUtf8("Дата ")<<command.getDate() ;
+                if(!command.getClassName().isEmpty()) qDebug() <<QString::fromUtf8("Имя класса ")<<command.getClassName() ;
+                if(!command.getParams().isEmpty()) qDebug() <<QString::fromUtf8("Аргументы метода ")<<command.getParams() ;
+                if(!command.getReturnValue().isEmpty()) qDebug() <<QString::fromUtf8("возращаемый тип ")<<command.getReturnValue() ;
+                if(!command.getMethod().isEmpty()) qDebug() <<QString::fromUtf8("Имя метода ")<<command.getMethod() ;
+                if(!command.getMember().isEmpty()) qDebug() <<QString::fromUtf8("Имя поля ")<<command.getMember() ;
             }
 
 
@@ -120,6 +139,7 @@ void Documentation::generateDocumentation(){
         }
         emit progress(i+1);
         emit changeStatus(i, int(Status::Status_ready));
+        file.close();
     }
 
     emit changeStatus(0, int(Status::Status_done));
