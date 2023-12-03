@@ -18,6 +18,8 @@ public:
 
     void setListFiles(QStringList list);
 
+    Writer* getWriter() { return writer;}
+
 private:
     enum class Status : int{
         Status_added = 1,
@@ -39,7 +41,7 @@ private:
 
 signals:
     void progress(int doneCount);
-    void changeStatus(int row, int status);
+    void changeStatus(int row, int status, QString error = QString());
 };
 
 #endif // DOCUMENTATION_H

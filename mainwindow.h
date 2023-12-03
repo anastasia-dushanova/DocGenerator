@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QMessageBox>
+#include <QProcess>
 #include <documentation.h>
 
 QT_BEGIN_NAMESPACE
@@ -27,7 +28,7 @@ private slots:
 
     void slotProgressChanged(int doneCount);
 
-    void slotChangeStatus(int row, int status);
+    void slotChangeStatus(int row, int status, QString errorMessage = QString());
 
 private:
     Ui::MainWindow *ui;
@@ -38,13 +39,15 @@ private:
         Status_processing,
         Status_ready,
         Status_error,
-        Status_done
+        Status_done,
+        Status_fileError
     };
 
     QStringList selectedFiles;
 
     void inputOnTableView(QStringList list);
 
+    void makeDocx();
 
 };
 #endif // MAINWINDOW_H

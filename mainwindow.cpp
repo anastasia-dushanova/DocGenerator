@@ -9,7 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButton_start->setDisabled(true);
     doc = new Documentation();
     connect(doc, SIGNAL(progress(int)), this, SLOT(slotProgressChanged(int)));
-    connect(doc, SIGNAL(changeStatus(int, int)), this, SLOT(slotChangeStatus(int, int)));
+    connect(doc, SIGNAL(changeStatus(int, int, QString)), this, SLOT(slotChangeStatus(int, int, QString)));
+    connect(doc->getWriter(), SIGNAL(status(int, int, QString)), this, SLOT(slotChangeStatus(int, int, QString)));
 }
 
 MainWindow::~MainWindow()
@@ -36,6 +37,9 @@ void MainWindow::on_pushButton_chooseFile_clicked()
 void MainWindow::inputOnTableView(QStringList list){
 
     qDebug() << "outputOnTableView(QStringList list)";
+    ui->label_count->clear();
+    ui->label_count->setText("[0/0]");
+    ui->progressBar->reset();
     if(ui->tableWidget->rowCount() > 0)
         ui->tableWidget->clearContents();
 
@@ -51,7 +55,7 @@ void MainWindow::inputOnTableView(QStringList list){
 
 }
 
-void MainWindow::slotChangeStatus(int row, int status){
+void MainWindow::slotChangeStatus(int row, int status, QString error){
     switch(status){
     case static_cast<int>(Status::Status_added) :{
         QTableWidgetItem* item = new QTableWidgetItem("Добавлено");
@@ -81,6 +85,14 @@ void MainWindow::slotChangeStatus(int row, int status){
         QMessageBox::information(this,
                                  "Готово",
                                  "Все файлы обработаны");
+        ui->label_status->setText(" Готово");
+        makeDocx();
+        break;
+    }
+    case static_cast<int>(Status::Status_fileError) : {
+        QMessageBox::warning(this,
+                             "Внимание",
+                             error);
         break;
     }
     default:{
@@ -91,7 +103,32 @@ void MainWindow::slotChangeStatus(int row, int status){
     }
 
     }
+}
 
+void MainWindow::makeDocx(){
+    //pandoc -o output.docx -f markdown -t docx filename.md
+//    pandoc documentation.md  --reference-doc=template.docx --output=output.docx --to=docx
+//    pandoc -s --reference-doc=template.docx -o out.docx documentation.md
+    QString ref = "--reference-doc="+QCoreApplication::applicationDirPath() + "/template.docx";
+    QString md = QCoreApplication::applicationDirPath() + "/documentation.md";
+    QString out = QCoreApplication::applicationDirPath() + "/documentation.docx";
+    QProcess* process = new QProcess(this);
+    process->start("pandoc", QStringList() << "-s"<<ref<<"-o"<<out<<md);
+//    process->start("pandoc", QStringList() << "-o" << out << "-f" << "markdown"<<"-t"<<"docx"<<md);
+//    process->waitForFinished(-1);
+    if( !process->waitForStarted() || !process->waitForFinished() ) {
+        return;
+    }
+
+    QString error = process->readAllStandardError();
+    if(error.isEmpty())
+        QMessageBox::information(this, "", "Файл с документацией готов");
+    else
+        QMessageBox::warning(this, "Внимание", "При создание документации возникла ошибка\n"+
+                                               error);
+
+//    qDebug() << process->readAllStandardError();
+//    qDebug() << process->readAllStandardOutput();
 
 }
 
