@@ -25,7 +25,7 @@ void MainWindow::on_pushButton_chooseFile_clicked()
     if(!selectedFiles.isEmpty())
         selectedFiles.clear();
 
-    selectedFiles  = QFileDialog::getOpenFileNames(this, "Выберите файлы", "D:/univer/maga/Managment/Library", "");
+    selectedFiles  = QFileDialog::getOpenFileNames(this, "Выберите файлы", "C:/univer/maga/Library", "");
 
     if(selectedFiles.isEmpty())
         return;
@@ -122,7 +122,7 @@ void MainWindow::makeDocx(){
 
     QString error = process->readAllStandardError();
     if(error.isEmpty())
-        QMessageBox::information(this, "", "Файл с документацией готов");
+        QMessageBox::information(this, "Готово", "Файл с документацией готов");
     else
         QMessageBox::warning(this, "Внимание", "При создание документации возникла ошибка\n"+
                                                error);

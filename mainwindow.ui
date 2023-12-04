@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Генератор документации</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="pushButton_chooseFile">
@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Выбрать папку/файл</string>
+     <string>Выбрать файлы</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_start">
@@ -132,7 +132,7 @@
      <x>0</x>
      <y>0</y>
      <width>577</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
